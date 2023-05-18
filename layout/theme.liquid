@@ -1,45 +1,20 @@
-{% comment %}ly_liquid_scripts_begin{% endcomment %}{% capture ly_liquid_content %}{% comment %}ly_liquid_scripts_end{% endcomment %}<!doctype html>
-<html class="no-js" lang="{{ request.locale.iso_code }}">
+<!doctype html>
+<html class="no-js" lang="{{ request.locale.iso_code }}" dir="{{ settings.text_direction }}">
 <head>
-  <!-- Global site tag (gtag.js) - Google Ads: 857420790 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-857420790"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-857420790');
-</script>
-
-  <meta name="google-site-verification" content="VY-uZADSLURuPEMovZUXnGLCWxS1Qfy_l3HFsvf7pZs" />
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-5T34BLPB47"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);} 
-  gtag('js', new Date());
-
-  gtag('config', 'G-5T34BLPB47');
-</script>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="{{ settings.color_button }}">
   <link rel="canonical" href="{{ canonical_url }}">
-  <link rel="canonical" href="{{ canonical_url }}">
-  <link rel="preconnect" href="https://cdn.shopify.com">
-  <link rel="preconnect" href="https://fonts.shopifycdn.com">
+  <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
   <link rel="dns-prefetch" href="https://productreviews.shopifycdn.com">
   <link rel="dns-prefetch" href="https://ajax.googleapis.com">
   <link rel="dns-prefetch" href="https://maps.googleapis.com">
   <link rel="dns-prefetch" href="https://maps.gstatic.com">
-{% if request.page_type == 'index' or request.page_type == 'product' %}
-<link rel="alternate" hreflang="sv" href="{{ canonical_url | replace: shop.domain, 'livlyclothing.se' }}" />
-<link rel="alternate" href="{{ canonical_url | replace: shop.domain, 'livlyclothing.eu' }}" hreflang="en-GB" />
-<link rel="alternate" href="{{ canonical_url | replace: shop.domain, 'livlyclothing.com' }}" hreflang="en-US" />
-{% endif %}
-   {%- if settings.favicon != blank -%}
-    <link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png">
+
+  {%- if settings.favicon != blank -%}
+    <link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png" />
   {%- endif -%}
 
   {%- render 'seo-title' -%}
@@ -51,8 +26,7 @@
   {%- render 'social-meta-tags' -%}
 
   {%- render 'font-face' -%}
-  {{ 'theme.css' | asset_url | stylesheet_tag }}
-  {{ 'livly.scss.css' | asset_url | stylesheet_tag }}
+  {{ 'theme.css' | asset_url | stylesheet_tag: preload: true }}
   {%- render 'css-variables' -%}
 
   <script>
@@ -60,62 +34,55 @@
 
     window.theme = window.theme || {};
     theme.routes = {
-      cart: "{{ routes.cart_url }}",
-      cartAdd: "{{ routes.cart_add_url | append: '.js'}}",
-      cartChange: "{{ routes.cart_change_url }}"
+      home: "{{ routes.root_url }}",
+      cart: "{{ routes.cart_url | append: '.js' }}",
+      cartPage: "{{ routes.cart_url }}",
+      cartAdd: "{{ routes.cart_add_url | append: '.js' }}",
+      cartChange: "{{ routes.cart_change_url | append: '.js' }}",
+      search: "{{ routes.search_url }}",
+      predictive_url: "{{ routes.predictive_search_url }}"
     };
-
     theme.strings = {
       soldOut: {{ 'products.product.sold_out' | t | json }},
       unavailable: {{ 'products.product.unavailable' | t | json }},
-      stockLabel: {{ 'products.product.stock_label' | t: count: '[count]' | json }},
+      inStockLabel: {{ 'products.product.in_stock_label' | t | json }},
+      oneStockLabel: {{ 'products.product.stock_label.one' | t: count: '[count]' | json }},
+      otherStockLabel: {{ 'products.product.stock_label.other' | t: count: '[count]' | json }},
       willNotShipUntil: {{ 'products.product.will_not_ship_until' | t: date: '[date]' | json }},
       willBeInStockAfter: {{ 'products.product.will_be_in_stock_after' | t: date: '[date]' | json }},
       waitingForStock: {{ 'products.product.waiting_for_stock' | t | json }},
       savePrice: {{ 'products.general.save_html' | t: saved_amount: '[saved_amount]' | json }},
       cartEmpty: {{ 'cart.general.empty' | t | json }},
       cartTermsConfirmation: {{ 'cart.general.terms_confirm' | t | json }},
-      asGift: {{ 'cart.giftbox.purchased_as_gift' | t | json}}
+      searchCollections: {{ 'general.search.collections' | t | json }},
+      searchPages: {{ 'general.search.pages' | t | json }},
+      searchArticles: {{ 'general.search.articles' | t | json }},
+      productFrom: {{ 'products.general.from_text_html' | t: price: '' | json }},
+      maxQuantity: {{ 'cart.general.max_quantity' | t: quantity: '[quantity]', title: '[title]' | json }}
     };
-
     theme.settings = {
-      dynamicVariantsEnable: true,
-      dynamicVariantType: {{ settings.variant_type | json }},
       cartType: {{ settings.cart_type | json }},
+      isCustomerTemplate: {% if request.page_type contains 'customers/' %}true{% else %}false{% endif %},
       moneyFormat: {{ shop.money_format | json }},
       saveType: {{ settings.product_save_type | json }},
-      recentlyViewedEnabled: false,
+      productImageSize: {{ settings.product_grid_image_size | json }},
+      productImageCover: {{ settings.product_grid_image_fill }},
       predictiveSearch: {{ settings.predictive_search_enabled }},
       predictiveSearchType: {{ settings.search_type | json }},
-      inventoryThreshold: {{ settings.inventory_threshold }},
+      predictiveSearchVendor: {{ settings.predictive_search_show_vendor | json }},
+      predictiveSearchPrice: {{ settings.predictive_search_show_price | json }},
       quickView: {{ settings.quick_shop_enable }},
       themeName: 'Impulse',
-      themeVersion: "3.4.0",
-      embroidery_variant: {{ all_products[settings.embroidery_product].selected_or_first_available_variant.id | json }},
-      embroidery_property: {{ settings.embroidery_property | json }}
+      themeVersion: "7.3.3"
     };
-
-    theme.settings.giftProdutLimitText = "{{ 'cart.giftbox.maximum_number_of_products' | t }}";
-    theme.settings.giftPropertyName = "{{ 'cart.giftbox.giftbox_property_name' | t }}";
-    theme.settings.giftProductLimit = {{ settings.minicart_giftbox_limit }};
-    theme.settings.giftProductHandle = [];
-
-    {%- for giftbox_product in collections[settings.minicart_giftbox_default].products -%}
-      var obj = {};
-      obj.title = "{{ giftbox_product.title }}";
-      obj.handle = "{{ giftbox_product.handle }}";
-      theme.settings.giftProductHandle.push(obj);
-    {%- endfor -%}
-    
   </script>
 
   {{ content_for_header }}
 
-  <script src="{{ 'vendor-scripts-v7.js' | asset_url | split: '?' | first }}" defer="defer"></script>
+  <script src="{{ 'vendor-scripts-v11.js' | asset_url | split: '?' | first }}" defer="defer"></script>
 
   {%- if shop.enabled_currencies.size > 1 -%}
-    <link rel="preload" as="style" href="{{ 'currency-flags.css' | asset_url }}" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{{ 'currency-flags.css' | asset_url }}"></noscript>
+    <link rel="stylesheet" href="{{ 'country-flags.css' | asset_url | split: '?' | first }}">
   {%- endif -%}
 
   <script src="{{ 'theme.js' | asset_url }}" defer="defer"></script>
@@ -123,203 +90,56 @@
   {%- if request.page_type contains 'customers/' -%}
     <script src="{{ 'shopify_common.js' | shopify_asset_url }}" defer="defer"></script>
   {%- endif -%}
+
+  {% if request.design_mode %}
+    <script src="https://api.archetypethemes.co/design-mode.js" defer="defer"></script>
+  {% endif %}
 </head>
 
-<body class="template-{{ template | replace: '.', ' ' | truncatewords: 1, '' | handle }}{% if request.path == '/challenge' %} template-challange{% endif %}" data-center-text="{{settings.type_body_align_text}}" data-button_style="{{settings.button_style}}" data-type_header_capitalize="{{settings.type_header_capitalize}}" data-type_headers_align_text="{{settings.type_headers_align_text}}" data-type_product_capitalize="{{settings.type_product_capitalize}}" data-swatch_style="{{settings.swatch_style}}">
+<body class="template-{{ template | replace: '.', ' ' | truncatewords: 1, '' | handle }}{% if request.path == '/challenge' %} template-challange{% endif %}" data-center-text="{{ settings.type_body_align_text }}" data-button_style="{{ settings.button_style }}" data-type_header_capitalize="{{ settings.type_header_capitalize }}" data-type_headers_align_text="{{ settings.type_headers_align_text }}" data-type_product_capitalize="{{ settings.type_product_capitalize }}" data-swatch_style="{{ settings.swatch_style }}" {% if settings.disable_animations %}data-disable-animations="true"{% endif %}>
 
   <a class="in-page-link visually-hidden skip-link" href="#MainContent">{{ 'general.accessibility.skip_to_content' | t }}</a>
 
   <div id="PageContainer" class="page-container">
     <div class="transition-body">
-    {%- section 'choose-country' -%}
-    {%- section 'header' -%}
+
+    {%- sections 'header-group' -%}
+    {%- sections 'popup-group' -%}
 
       <main class="main-content" id="MainContent">
         {{ content_for_layout }}
       </main>
 
-      {%- section 'footer-promotions' -%}
-      {%- section 'footer' -%}
+    {%- sections 'footer-group' -%}
 
     </div>
   </div>
 
-  {%- section 'newsletter-popup' -%}
+  {%- liquid
+    render 'video-modal'
+    render 'photoswipe-template'
+    render 'tool-tip'
+  -%}
 
-  {%- if settings.cart_type == 'drawer' -%}
-    {%- render 'ajax-cart-template' -%}
-  {%- endif -%}
-
-  <div class="hide">
-    <button id="prevArrowTemplate" class="slick-prev" aria-label="{{ 'general.pagination.previous' | t }}" type="button">
-      <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-chevron-left" viewBox="0 0 284.49 498.98"><path d="M249.49 0a35 35 0 0 1 24.75 59.75L84.49 249.49l189.75 189.74a35.002 35.002 0 1 1-49.5 49.5L10.25 274.24a35 35 0 0 1 0-49.5L224.74 10.25A34.89 34.89 0 0 1 249.49 0z"/></svg>
-      <span class="icon__fallback-text">{{ 'general.pagination.previous' | t }}</span>
-    </button>
-    <button id="nextArrowTemplate" class="slick-next" aria-label="{{ 'general.pagination.next' | t }}" type="button">
-      <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-chevron-right" viewBox="0 0 284.49 498.98"><path d="M35 498.98a35 35 0 0 1-24.75-59.75l189.74-189.74L10.25 59.75a35.002 35.002 0 0 1 49.5-49.5l214.49 214.49a35 35 0 0 1 0 49.5L59.75 488.73A34.89 34.89 0 0 1 35 498.98z"/></svg>
-      <span class="icon__fallback-text">{{ 'general.pagination.next' | t }}</span>
-    </button>
-  </div>
-
-  {%- if settings.predictive_search_enabled -%}
-    {%- render 'predictive-template' -%}
-  {%- endif -%}
-
-  {%- render 'video-modal' -%}
-  {%- render 'photoswipe-template' -%}
-  {%- if template contains 'product' -%}
-    {%- render 'recently-viewed-product-template' -%}
-  {%- endif -%}
-
-<!-- Back in Stock helper snippet -->
-{% render 'back-in-stock-helper' %}
-<!-- End Back in Stock helper snippet -->
-{% comment %}ly_liquid_scripts_begin{% endcomment %}{% endcapture %}{% render 'ly-liquid-scripts' content: ly_liquid_content %}{% comment %}ly_liquid_scripts_end{% endcomment %}{% comment %}ly_core_scripts_begin{% endcomment %}{% render 'ly-core-scripts' %}{% comment %}ly_core_scripts_end{% endcomment %}{% comment %}ly_switcher_factory_begin{% endcomment %}{% render 'ly-switcher-factory' %}{% comment %}ly_switcher_factory_end{% endcomment %}
-{% include 'swymSnippet' %}
-{% if settings.show_cookie %}
-
-<!-- Custom Cookie Popup -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> 
-<script>
-    function setCookie(cname,cvalue,exdays) {
-      const d = new Date();
-      d.setTime(d.getTime() + (exdays*24*60*60*1000));
-      let expires = "expires=" + d.toUTCString();
-      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-    }
-    
-    function getCookie(cname) {
-      let name = cname + "=";
-      let decodedCookie = decodeURIComponent(document.cookie);
-      let ca = decodedCookie.split(';');
-      for(let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') {
-          c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-          return c.substring(name.length, c.length);
-        }
-      }
-      return "";
-    }
-    
-    function checkCookie() {
-      let user = getCookie("cookie1");
-      let user1 = getCookie("cookie2");
-      let user2 = getCookie("cookie3");
-      let allcookie = getCookie("cookie");
-      if (user != "" || user1 != "" || user2!= "" || allcookie != "" ) {
-        $('.custompopup').hide();
-        console.log('yes it is set');
-      } else {
-        $('.custompopup').show();
-        console.log('not set');
-      }
-    }
-
-    $(document).ready(function() {
-      checkCookie();
-      $('#customize').click(function(){
-      $('body').addClass('no-scroll');
-        $('.customizecookie').show();
-        $('.allcookie').hide();
-      });
-
-      $('#acceptsome').click(function(){
-        $('body').removeClass('no-scroll');
-        $('.customizecookie').hide();
-        $('.custompopup').hide();
-      });
-    $('#acceptall').click(function(){
-        $('body').removeClass('no-scroll');
-        $('.customizecookie').hide();
-        $('.custompopup').hide();
-      });
-      $('#c-hidedetail').click(function(){
-        $('.customizecookie').hide();
-        $('.allcookie').show();
-      });
-   $('.main-content').click(function(){
-        $('body').removeClass('no-scroll');
-      });
-    });
-  
-  </script>
-<div class="custompopup" style="display: none;">
-   <div class="allcookie">
-      <h3>{{settings.text1 }}</h3>
-         {{ settings.text2 }}
-      <div id="cookie-action">
-         <button id="customize">Anpassa cookies</button>
-         <button onclick="setCookie('cookie', 'all', 30);" value="all" id="acceptall">Acceptera cookies</button>
-      </div>
-   </div>
-   <div class="customizecookie" style="display: none;">
-      <div id="cookiebanner-detail__action"><a id="c-hidedetail" onclick="toggleShowDetail()" href="javascript:void(0)">Tillbaka</a></div>
-      <ul id="cookiebanner-detail__categories">
-         <li class="category">
-            <div class="category-header"><span class="category-header__title">{{ settings.text3 }}</span><span class="category-header__action">Alltid aktiva</span></div>
-            <div class="category-description">{{ settings.text4 }}</div>
-         </li>
-         <li class="category">
-            <div class="category-header">
-               <span class="category-header__title">{{ settings.text5 }}</span>
-               <span class="category-header__action">
-                  <label class="switch" for="cookie1">
-                     <input type="checkbox" checked
-                        name="vehicle0"
-                        id="cookie1"
-                        onchange="setCookie('cookie1', 'car1', 30)">
-                     <div class="slider round"></div>
-                  </label>
-               </span>
-            </div>
-            <div class="category-description">{{ settings.text6 }}</div>
-         
-         </li>
-         <li class="category">
-            <div class="category-header">
-               <span class="category-header__title">{{ settings.text7 }}</span>
-               <span class="category-header__action">
-                  <label class="switch" for="cookie2">
-                     <input type="checkbox" checked
-                        name="vehicle1"
-                        onchange="setCookie('cookie2', 'car2', 30)"
-                        id="cookie2"
-                        value="Car">
-                     <div class="slider round"></div>
-                  </label>
-               </span>
-            </div>
-       
-            <div class="category-description">{{ settings.text8 }}</div>
-         
-         </li>
-         <li class="category">
-            <div class="category-header">
-               <span class="category-header__title">{{ settings.text9 }}</span> 
-               <span class="category-header__action">
-                  <label class="switch" for="cookie3">
-                     <input type="checkbox" checked
-                        name="vehicle2"
-                        onchange="setCookie('cookie3', 'car3', 30)"
-                        id="cookie3"
-                        value="Car">
-                     <div class="slider round"></div>
-                  </label>
-               </span>
-            </div>
-            <div class="category-description">{{ settings.text10 }}</div>
-         </li>
-         <li class="category">
-            <div class="category-header"><span class="category-header__title">{{ settings.text11 }}</span><span class="category-header__action">Alltid aktiva</span></div>
-            <div class="category-description">{{ settings.text12 }}</div>
-         </li>
-      </ul>
-      <button id="acceptsome">Acceptera mina val</button>
-   </div>
-</div>
-{% endif %}
+  {% comment %} Image markup used when building product grid item via JS {% endcomment %}
+  <template id="naturalImageMarkup">
+    <div class="image-wrap" style="height: 0;">
+      <image-element>
+        <img class="grid-product__image" width height src srcset loading="lazy" alt>
+      </image-element>
+    </div>
+  </template>
+  <template id="fixedRatioImageMarkup">
+    <div class="grid__image-ratio">
+      <image-element>
+        <img width height src srcset loading="lazy" alt>
+      </image-element>
+    </div>
+  </template>
+  <template id="articleImageMarkup">
+    <image-element>
+      <img width height src loading="lazy">
+    </image-element>
+  </template>
 </body>
 </html>

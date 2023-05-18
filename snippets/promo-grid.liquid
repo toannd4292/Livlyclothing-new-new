@@ -75,7 +75,8 @@
         {% endif %}
 
         {%- assign accent_exists = false -%}
-        {% unless block.settings.color_accent contains 'rgba(0,0,0,0)' %}
+        {%- assign button_alpha = block.settings.color_accent | color_extract: 'alpha' -%}
+        {% unless button_alpha == 0.0 %}
           {%- assign accent_exists = true -%}
           .flex-grid__item--{{ block.id }} .btn {
             background: {{ block.settings.color_accent }} !important;
@@ -136,6 +137,15 @@
         {% endif %}
       {%- endstyle -%}
 
+      {%- liquid
+        assign blockWidth = block.settings.width | times: 1
+        if forloop.index == 1 and blockWidth >= 50
+          assign loading = section.settings.lazyload_images
+        else
+          assign loading = true
+        endif
+      -%}
+
       <div class="flex-grid__item flex-grid__item--{{ block.settings.width }} flex-grid__item--{{ block.id }} type-{{ block.type }}" {{ block.shopify_attributes }}>
         {%- case block.type -%}
 
@@ -144,7 +154,7 @@
               class="promo-grid__container{% if block.settings.boxed %} promo-grid__container--boxed{% endif %}{% if block.settings.framed %} promo-grid__container--framed{% endif %} {{ block.settings.text_align }}">
 
               {%- if block.settings.cta_link1 != blank and block.settings.cta_link2 == blank -%}
-                <a href="{{ block.settings.cta_link1 }}" class="promo-grid__slide-link" aria-hidden="true"></a>
+                <a href="{{ block.settings.cta_link1 }}" class="promo-grid__slide-link" aria-hidden="true" aria-label="{{ block.settings.cta_text1 }}"></a>
               {%- endif -%}
 
               <div class="promo-grid__bg">
@@ -152,29 +162,17 @@
                   {%- render 'promo-video', id: block.id, url: block.settings.video_url -%}
                 {%- else -%}
                   {%- if block.settings.image != blank -%}
-                    {%- style -%}
-                      .promo-grid__bg-image--{{ block.id }} {
-                        object-position: {{ block.settings.focal_point }};
-                        font-family: "object-fit: cover; object-position: {{ block.settings.focal_point }};";
-                      }
-                    {%- endstyle -%}
 
-                    {%- assign img_url = block.settings.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+                    {%- capture image_classes -%}
+                      image-fit promo-grid__bg-image promo-grid__bg-image--{{ block.id }}
+                    {%- endcapture -%}
 
-                    <img
-                      class="image-fit promo-grid__bg-image promo-grid__bg-image--{{ block.id }} lazyload"
-                      src="{{ block.settings.image | img_url: '300x' }}"
-                      data-src="{{ img_url }}"
-                      data-aspectratio="{{ block.settings.image.aspect_ratio }}"
-                      data-sizes="auto"
-                      data-parent-fit="cover"
-                      alt="{{ block.settings.image.alt | escape }}">
-                    <noscript>
-                      <img
-                        class="image-fit promo-grid__bg-image promo-grid__bg-image--{{ block.id }} lazyloaded"
-                        src="{{ block.settings.image | img_url: '1800x' }}"
-                        alt="{{ block.settings.image.alt }}">
-                    </noscript>
+                    {%- render 'image-element',
+                      img: block.settings.image,
+                      loading: loading,
+                      sizeVariable: block.settings.width,
+                      classes: image_classes,
+                    -%}
                   {%- else -%}
                     {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
                   {%- endif -%}
@@ -190,9 +188,9 @@
                       </div>
                     {%- endif -%}
                     {%- if block.settings.heading != blank -%}
-                      <div class="rte--block rte--strong">
+                      <h2 class="rte--block rte--strong">
                         {{ block.settings.heading }}
-                      </div>
+                      </h2>
                     {%- endif -%}
                     {%- if block.settings.textarea != blank -%}
                       <div class="rte--block">
@@ -247,19 +245,26 @@
                     {%- assign collection_image_1 = collections[block.settings.sale_collection].products[0].featured_media.preview_image -%}
                     {%- assign collection_image_2 = collections[block.settings.sale_collection].products[1].featured_media.preview_image -%}
 
+                    {%- liquid
+                      if block.settings.width == '50'
+                        assign sizeVariable = '25vw'
+                        assign fallback = '25vw'
+                      else
+                        assign sizeVariable = '50vw'
+                        assign fallback = '25vw'
+                      endif
+                    -%}
+
                     <div class="type-sale-images__image">
                       {%- if collection_image_1 != blank -%}
                         <div class="image-wrap" style="height: 0; padding-bottom: {{ 100 | divided_by: collection_image_1.aspect_ratio }}%;">
-                          {%- assign img_url = collection_image_1 | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
-                          <img class="lazyload"
-                              data-src="{{ img_url }}"
-                              data-widths="[360, 540, 720, 900, 1080, 1600]"
-                              data-aspectratio="{{ collection_image_1.aspect_ratio }}"
-                              data-sizes="auto"
-                              alt="{{ collection_image_1.alt }}">
-                          <noscript>
-                            <img class="lazyloaded" src="{{ collection_image_1 | img_url: '800x' }}" alt="{{ image.alt }}">
-                          </noscript>
+                          {%- render 'image-element',
+                            img: collection_image_1,
+                            loading: loading,
+                            widths: '360, 540, 720, 900, 1080, 1600',
+                            sizeVariable: sizeVariable,
+                            fallback: fallback,
+                          -%}
                         </div>
                       {%- endif -%}
                     </div>
@@ -267,16 +272,13 @@
                     <div class="type-sale-images__image">
                       {%- if collection_image_2 != blank -%}
                         <div class="image-wrap" style="height: 0; padding-bottom: {{ 100 | divided_by: collection_image_2.aspect_ratio }}%;">
-                          {%- assign img_url = collection_image_2 | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
-                          <img class="lazyload"
-                              data-src="{{ img_url }}"
-                              data-widths="[360, 540, 720, 900, 1080, 1600]"
-                              data-aspectratio="{{ collection_image_2.aspect_ratio }}"
-                              data-sizes="auto"
-                              alt="{{ collection_image_2.alt }}">
-                          <noscript>
-                            <img class="lazyloaded" src="{{ collection_image_2 | img_url: '800x' }}" alt="{{ image.alt }}">
-                          </noscript>
+                          {%- render 'image-element',
+                            img: collection_image_2,
+                            loading: loading,
+                            widths: '360, 540, 720, 900, 1080, 1600',
+                            sizeVariable: sizeVariable,
+                            fallback: fallback,
+                          -%}
                         </div>
                       {%- endif -%}
                     </div>
@@ -297,7 +299,7 @@
                 assign block_img = all_products[product_handle].featured_media.preview_image
                 assign block_text = all_products[product_handle].title
               elsif block.settings.link contains '/collections/'
-                assign lang_code_string = request.locale.iso_code | prepend: '/'
+                assign lang_code_string = request.locale.iso_code | prepend: '/' | downcase
                 assign collection_handle = block.settings.link | remove: '/collections/' | remove: lang_code_string
                 assign block_text = collections[collection_handle].title
                 if collections[collection_handle].image
@@ -316,22 +318,19 @@
 
             <a href="{{ block.settings.link }}"
               class="promo-grid__container{% if block.settings.framed %} promo-grid__container--framed{% endif %}{% if block.settings.color_tint_opacity > 0 %} promo-grid__container--tint{% endif %} vertical-center horizontal-center">
-              <div
-                class="promo-grid__bg{% if block_img != blank %} lazyload{% endif %}"
-                {% if block_img != blank %}
-                  data-bgset="{% render 'bgset', image: block_img %}"
-                  data-sizes="auto"
-                {% endif %}>
-                {% if block_img == blank %}
+
+              <div class="promo-grid__bg">
+                {%- if block_img != blank -%}
+                  {%- render 'image-element',
+                    img: block_img,
+                    loading: loading,
+                    sizeVariable: block.settings.width,
+                    classes: 'image-fit',
+                  -%}
+                {%- else -%}
                   {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
-                {% endif %}
+                {%- endif -%}
               </div>
-              <noscript>
-                <div
-                  class="promo-grid__bg"
-                  style="background-image: url({{ block_img | img_url: '1400x' }});">
-                </div>
-              </noscript>
 
               <div class="promo-grid__content">
                 <div class="promo-grid__text text-center">
@@ -353,17 +352,13 @@
               {%- endif -%}
                 {%- if block.settings.image != blank -%}
                   <div class="image-wrap" style="height: 0; padding-bottom: {{ 100 | divided_by: block.settings.image.aspect_ratio }}%;">
-                    {%- assign img_url = block.settings.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
-                    <img class="lazyload"
-                        data-src="{{ img_url }}"
-                        data-widths="[360, 540, 720, 900, 1080, 1600]"
-                        data-aspectratio="{{ block.settings.image.aspect_ratio }}"
-                        data-sizes="auto"
-                        role="presentation"
-                        alt="{{ block.settings.image.alt }}">
-                    <noscript>
-                      <img class="lazyloaded" src="{{ block.settings.image | img_url: '600x' }}" alt="{{ block.settings.image.alt }}">
-                    </noscript>
+                    {%- render 'image-element',
+                      img: block.settings.image,
+                      loading: loading,
+                      widths: '360, 540, 720, 900, 1080, 1600',
+                      sizeVariable: block.settings.width,
+                      role: 'presentation',
+                    -%}
                   </div>
                 {%- else -%}
                   {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
@@ -382,23 +377,20 @@
                   {%- if block.settings.image != blank -%}
                     <div class="type-banner__image">
                       <div class="image-wrap" style="height: 0; padding-bottom: {{ 100 | divided_by: block.settings.image.aspect_ratio }}%;">
-                        {%- assign img_url = block.settings.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
-                        <img class="lazyload"
-                            data-src="{{ img_url }}"
-                            data-widths="[180, 360, 460]"
-                            data-aspectratio="{{ block.settings.image.aspect_ratio }}"
-                            data-sizes="auto"
-                            role="presentation"
-                            alt="{{ block.settings.image.alt }}">
-                        <noscript>
-                          <img class="lazyloaded" src="{{ block.settings.image | img_url: '300x' }}" alt="{{ block.settings.image.alt }}">
-                        </noscript>
+                        {%- render 'image-element',
+                          img: block.settings.image,
+                          loading: loading,
+                          sizeVariable: '200px',
+                          fallback: '45vw',
+                          widths: '180, 360, 460',
+                          role: 'presentation',
+                        -%}
                       </div>
                     </div>
                   {%- endif -%}
                   <div class="type-banner__text">
                     {%- if block.settings.heading != blank -%}
-                      <p class="h3">{{ block.settings.heading }}</p>
+                      <h2 class="h3">{{ block.settings.heading }}</h2>
                     {%- endif -%}
                     {%- if block.settings.text != blank -%}
                       <p>{{ block.settings.text }}</p>
@@ -428,9 +420,9 @@
                           </div>
                         {%- endif -%}
                         {%- if block.settings.heading != blank -%}
-                          <div class="rte--block rte--strong">
+                          <h2 class="rte--block rte--strong">
                             {{ block.settings.heading }}
-                          </div>
+                          </h2>
                         {%- endif -%}
                         {%- if block.settings.textarea != blank -%}
                           <div class="rte--block">
@@ -465,17 +457,23 @@
                               </div>
                             {%- endif -%}
                             <div class="image-wrap" style="height: 0; padding-bottom: {{ 100 | divided_by: image.aspect_ratio }}%;">
-                              {%- assign img_url = image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
                               <a href="{{ product.url }}">
-                                <img class="lazyload"
-                                    data-src="{{ img_url }}"
-                                    data-widths="[360, 540, 720, 900, 1080, 1600]"
-                                    data-aspectratio="{{ image.aspect_ratio }}"
-                                    data-sizes="auto"
-                                    alt="{{ image.alt }}">
-                                <noscript>
-                                  <img class="lazyloaded" src="{{ image | img_url: '600x' }}" alt="{{ image.alt }}">
-                                </noscript>
+                                {%- liquid
+                                  if forloop.index == 1
+                                    assign sizeVariable = 'calc(0.75 * 50vw)'
+                                    assign fallback = '75vw'
+                                  else
+                                    assign sizeVariable = 'calc(0.30 * 50vw)'
+                                    assign fallback = '30vw'
+                                  endif
+                                -%}
+                                {%- render 'image-element',
+                                  img: image,
+                                  loading: loading,
+                                  sizeVariable: sizeVariable,
+                                  fallback: fallback,
+                                  widths: '360, 540, 720, 900, 1080, 1600',
+                                -%}
                               </a>
                             </div>
                           </div>

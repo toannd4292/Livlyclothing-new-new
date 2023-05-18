@@ -4,6 +4,11 @@
   Accepts:
   - media: {Object} Media Liquid object (required)
   - featured_media: {Object} Media Liquid object (required) - featured media of a given product or variant
+  - loading {String}
+  - sizes
+  - sizeVariable
+  - fallback
+  - mobile_layout
 {% endcomment %}
 
 {%- liquid
@@ -16,13 +21,21 @@
   assign video_type = ''
   assign video_modal = false
 
+  assign image_set = false
+  assign image_set_group = ''
+  if media.alt contains '#'
+    assign image_set_full = media.alt | split: '#' | last
+    if image_set_full contains '_'
+      assign image_set = true
+      assign image_set_group = image_set_full | split: '_' | first
+    endif
+  endif
+
   case media.media_type
     when 'external_video'
       assign has_video = true
       assign video_type = media.host
-      if media.host contains 'youtube'
-        assign video_id = media.external_id
-      endif
+      assign video_id = media.external_id
     when 'video'
       assign has_video = true
       assign video_type = 'mp4'
@@ -42,9 +55,15 @@
   endif
 -%}
 
-<div class="{% if is_featured %}starting-slide{% else %}secondary-slide{% endif %}" data-index="{{ loopIndex0 }}">
+<div
+  class="product-main-slide {% if is_featured %}starting-slide{% else %}secondary-slide{% endif %}"
+  data-index="{{ loopIndex0 }}"
+  {% if image_set %}
+    data-set-name="{{image_set_group}}"
+    data-group="{{image_set_full}}"
+  {% endif %}>
 
-  <div class="product-image-main product-image-main--{{ section_id }}">
+  <div data-product-image-main class="product-image-main">
 
     {%- if media.media_type == 'model' -%}
       {%- liquid
@@ -59,7 +78,7 @@
         {{ media | model_viewer_tag: image_size: product_zoom_size, reveal: 'interaction', toggleable: true, data-model-id: media.id }}
       </div>
       <button class="hide btn btn--circle btn--static product-single__close-media">
-        <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-close" viewBox="0 0 64 64"><path d="M19 17.61l27.12 27.13m0-27.12L19 44.74"/></svg>
+        <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-close" viewBox="0 0 64 64"><title>icon-X</title><path d="m19 17.61 27.12 27.13m0-27.12L19 44.74"/></svg>
       </button>
     {%- else -%}
       {%- liquid
@@ -68,25 +87,36 @@
         endif
       -%}
       <div class="image-wrap{% if has_video and video_modal == false %} hide{% endif %}" style="height: 0; padding-bottom: {{ 100 | divided_by: media_aspect_ratio }}%;">
+        {%- capture image_classes -%}
+          {% if product_zoom_enable %}photoswipe__image{% endif %}
+        {%- endcapture -%}
+
         {%- liquid
-          assign img_url = media | img_url: '1x1' | replace: '_1x1.', '_{width}x.'
-          assign zoom_img_url = media.preview_image | img_url: product_zoom_size
+          if mobile_layout == 'partial'
+            assign fallback = '75vw'
+          endif
         -%}
 
-        <img class="{% if settings.product_zoom_enable %}photoswipe__image{% endif %} lazyload"
-          data-photoswipe-src="{{ zoom_img_url }}"
-          data-photoswipe-width="{{ media_width }}"
-          data-photoswipe-height="{{ media_height }}"
-          data-index="{{ loopIndex }}"
-          data-src="{{ img_url }}"
-          data-widths="[360, 540, 720, 900, 1080]"
-          data-aspectratio="{{ media_aspect_ratio }}"
-          data-sizes="auto"
-          alt="{{ media.alt | escape }}">
+        {%- render 'image-element',
+          img: media.preview_image,
+          type: 'photoswipe',
+          classes: image_classes,
+          alt: media.alt | escape | split: '#' | first,
+          widths: '360, 540, 720, 900, 1080',
+          product_zoom_size: product_zoom_size,
+          loopIndex: loopIndex,
+          media: media,
+          media_width: media_width,
+          media_height: media_height,
+          sizes: sizes,
+          sizeVariable: sizeVariable,
+          fallback: fallback,
+          loading: loading,
+        -%}
 
-        {%- if settings.product_zoom_enable and media.media_type == 'image' -%}
+        {%- if product_zoom_enable and media.media_type == 'image' -%}
           <button type="button" class="btn btn--body btn--circle js-photoswipe__zoom product__photo-zoom">
-            <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-search" viewBox="0 0 64 64"><path d="M47.16 28.58A18.58 18.58 0 1 1 28.58 10a18.58 18.58 0 0 1 18.58 18.58zM54 54L41.94 42"/></svg>
+            <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-search" viewBox="0 0 64 64"><title>icon-search</title><path d="M47.16 28.58A18.58 18.58 0 1 1 28.58 10a18.58 18.58 0 0 1 18.58 18.58ZM54 54 41.94 42"/></svg>
             <span class="icon__fallback-text">{{ 'general.accessibility.close_modal' | t }}</span>
           </button>
         {%- endif -%}
@@ -94,7 +124,19 @@
 
       {%- if has_video and video_modal -%}
         {%- if video_type == 'youtube' -%}
-          <a href="https://youtube.com/watch?v={{ media.external_id }}" class="btn btn--circle btn--large btn--static product-video-trigger">
+          <a href="https://youtube.com/watch?v={{ media.external_id }}"
+            class="btn btn--circle btn--large btn--static product-video-trigger"
+            data-video-id="{{ media.external_id }}"
+          >
+            <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-play" viewBox="18.24 17.35 24.52 28.3"><path fill="#323232" d="M22.1 19.151v25.5l20.4-13.489-20.4-12.011z"/></svg>
+          </a>
+        {%- endif -%}
+        {%- if video_type == 'vimeo' -%}
+          <a href="https://player.vimeo.com/video/{{ media.external_id }}"
+            class="btn btn--circle btn--large btn--static product-video-trigger"
+            data-video-id="{{ media.external_id }}"
+            data-video-loop="{{ video_looping }}"
+          >
             <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-play" viewBox="18.24 17.35 24.52 28.3"><path fill="#323232" d="M22.1 19.151v25.5l20.4-13.489-20.4-12.011z"/></svg>
           </a>
         {%- endif -%}
@@ -125,10 +167,10 @@
         {%- unless video_modal -%}
           <div
             data-video-type="{{ video_type }}"
-            class="product__video-wrapper{% if video_type == 'youtube' %} loading{% endif %}"
+            class="product__video-wrapper{% if video_type == 'youtube' or video_type == 'vimeo' %} loading{% endif %}"
             data-video-style="{{ video_style }}"
             style="padding-bottom: {{ 100 | divided_by: media.aspect_ratio }}%;">
-            {%- if video_type == 'youtube' -%}
+            {%- if video_type == 'youtube' or video_type == 'vimeo' -%}
               <div
                 id="ProductVideo-{{ section_id }}-{{ loopIndex }}"
                 class="product__video"
@@ -136,7 +178,8 @@
                 data-video-type="{{ video_type }}"
                 data-video-style="{{ video_style }}"
                 data-video-loop="{{ video_looping }}"
-                data-youtube-id="{{ video_id }}">
+                data-video-id="{{ video_id }}"
+              >
               </div>
             {%- endif -%}
             {%- if video_type == 'mp4' -%}
@@ -153,11 +196,7 @@
                 id="ProductVideo-{{ section_id }}-{{ loopIndex }}"
                 class="product__video">
                 {%- for source in media.sources -%}
-                  {%- if isModal -%}
-                    <div class="hide product__video-src" src="{{ source.url }}" type="{{ source.mime_type }}"></div>
-                  {%- else -%}
-                    <source src="{{ source.url }}" type="{{ source.mime_type }}">
-                  {%- endif -%}
+                  <source src="{{ source.url }}" type="{{ source.mime_type }}">
                 {%- endfor -%}
                 Your browser does not support the video tag.
               </video>
