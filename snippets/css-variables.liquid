@@ -1,0 +1,84 @@
+{%- style -%}
+
+  @font-face {
+    font-family: 'Adobe Garamond Pro';
+    src: url('{{ "AGaramondPro-Bold.eot" | asset_url }}');
+    src: url('{{ "AGaramondPro-Bold.eot?#iefix" | asset_url }}') format('embedded-opentype'),
+        url('{{ "AGaramondPro-Bold.woff2" | asset_url }}') format('woff2'),
+        url('{{ "AGaramondPro-Bold.woff" | asset_url }}') format('woff'),
+        url('{{ "AGaramondPro-Bold.ttf" | asset_url }}') format('truetype'),
+        url('{{ "AGaramondPro-Bold.svg#AGaramondPro-Bold" | asset_url }}') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Adobe Garamond Pro';
+    src: url('{{ "AGaramondPro-Regular.eot" | asset_url }}');
+    src: url('{{ "AGaramondPro-Regular.eot?#iefix" | asset_url }}') format('embedded-opentype'),
+        url('{{ "AGaramondPro-Regular.woff2" | asset_url }}') format('woff2'),
+        url('{{ "AGaramondPro-Regular.woff" | asset_url }}') format('woff'),
+        url('{{ "AGaramondPro-Regular.ttf" | asset_url }}') format('truetype'),
+        url('{{ "AGaramondPro-Regular.svg#AGaramondPro-Regular" | asset_url }}') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Gill Sans';
+    src: url('{{ "GillSans-Bold.eot" | asset_url }}');
+    src: url('{{ "GillSans-Bold.eot?#iefix" | asset_url }}') format('embedded-opentype'),
+        url('{{ "GillSans-Bold.woff2" | asset_url }}') format('woff2'),
+        url('{{ "GillSans-Bold.woff" | asset_url }}') format('woff'),
+        url('{{ "GillSans-Bold.ttf" | asset_url }}') format('truetype'),
+        url('{{ "GillSans-Bold.svg#GillSans-Bold" | asset_url }}') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Gill Sans';
+    src: url('{{ "GillSans.eot" | asset_url }}');
+    src: url('{{ "GillSans.eot?#iefix" | asset_url }}') format('embedded-opentype'),
+        url('{{ "GillSans.woff2" | asset_url }}') format('woff2'),
+        url('{{ "GillSans.woff" | asset_url }}') format('woff'),
+        url('{{ "GillSans.ttf" | asset_url }}') format('truetype'),
+        url('{{ "GillSans.svg#GillSans" | asset_url }}') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --typeHeaderPrimary:'Adobe Garamond Pro', serif;
+    --typeHeaderFallback:'serif';
+    --typeHeaderSize:{{ settings.type_header_base_size | default: '32' | append: 'px' }};
+    --typeHeaderWeight: 700;
+    --typeHeaderLineHeight: {{ settings.type_header_line_height | default: 1.4 }};
+    --typeHeaderSpacing: {{ settings.type_header_spacing | default: '25' | divided_by: 1000.00 | append: 'em' }};
+
+    --typeBasePrimary:'Gill Sans', sans-serif;
+    --typeBaseFallback:'sans-serif';
+    --typeBaseSize: {{ settings.type_base_size | default: 16 | append: 'px' }};
+    --typeBaseWeight: 400;
+    --typeBaseSpacing: {{ settings.type_base_spacing | default: '50' | divided_by: 1000.00 | append: 'em' }};
+    --typeBaseLineHeight: {{ settings.type_base_line_height | default: 1.4 }};
+
+    --typeCollectionTitle: {{ settings.type_collection_size | append: 'px' }};
+
+    --iconWeight: {{ settings.icon_weight | default: '5px' }};
+    --iconLinecaps: {{ settings.icon_linecaps | default: 'miter' }};
+
+    {% if settings.button_style == 'round-slight' %}
+      --buttonRadius: 3px;
+    {% elsif settings.button_style == 'round' %}
+      --buttonRadius: 50px;
+    {% else %}
+      --buttonRadius: 0px;
+    {% endif %}
+
+    --colorGridOverlayOpacity: {{ settings.collection_grid_opacity | divided_by: 100.0 }};
+  }
+}
+{%- endstyle -%}

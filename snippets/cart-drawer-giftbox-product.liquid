@@ -1,0 +1,72 @@
+<div class="ajaxcart__product" data-product-id="{{ giftbox_product.id }}" data-product-to-remove>
+  <div class="ajaxcart__row">
+    {% assign giftbox_variant_count = giftbox_product.variants | size %}
+    {% if giftbox_product.available == true %}
+
+    <form method="post" action="/cart/add" enctype="multipart/form-data" class="js-giftbox-form add-to-cart-form minicart-giftbox-form" data-remove-on-complete="true">
+
+      {% if giftbox_product.featured_image %}
+      <div style="flex:30%;padding-bottom:10px;">
+        <a href="{{giftbox_product.url}}" class="ajaxcart__product-image">
+          <img src="{{ giftbox_product.featured_image | product_img_url: 'x180' }}"  alt="{{ item.alt | escape }}" />
+        </a>
+      </div>
+      {% endif %}
+
+      <div class="minicart-giftbox--wrapper">
+        <div class="ajaxcart__product-name--wrapper">
+          <a href="{{giftbox_product.url}}">{{giftbox_product.title}}</a>
+        </div>
+
+        <select class="minicart-giftbox-selector" name="id">
+          {%- for variant in giftbox_product.variants -%}
+          {%- if variant.available -%}
+          <option {% if variant == giftbox_product.selected_or_first_available_variant %}
+                  selected="selected"{% endif %}
+                  value="{{ variant.id }}">
+            {{ variant.title }} - {{ variant.price | money_with_currency }}
+          </option>
+          {%- else -%}
+          <option disabled="disabled">
+            {{ variant.title }} - {{ 'products.product.sold_out' | t }}
+          </option>
+          {%- endif -%}
+          {%- endfor -%}
+          
+          </select>
+        
+        <div>
+        {%- for variant in giftbox_product.variants -%}
+        {%- assign value = variant.option1 -%}
+        {%- assign color_image = value  | replace: ' ','' | append: '.png' -%}
+          
+        <div data-index="{{ forloop.index0 }}" class="js-minicart-variant-color variant-input minicart-variant-color{% if forloop.index == 1 %} minicart-variant-color-select{% endif %}">
+          <img src="{{ color_image | asset_img_url: '80x80' | crop: 'center' }}" class="lazyload">
+        </div>
+        {%- endfor -%}
+        </div>
+          
+          {% if settings.minicart_giftbox_show_addtocart %}
+          <input type="submit" value="{{ 'cart.giftbox.add_to_cart' | t }}" class="js-giftbox-submit add-to-cart"/>
+          {% endif %}
+        
+      </div>
+
+      {% if settings.minicart_giftbox_show_addtocart %}
+      <div class="minicart-giftbox-message">
+        <label for="CartGiftBoxMessage" class="ajaxcart__note">{{ 'cart.giftbox.message_for_gift_receiver' | t }}</label>
+        {%- capture message_property_name -%}{{ 'cart.giftbox.message_property_name' | t }}{%- endcapture -%}
+        <textarea id="CartGiftBoxMessage" class="input-full" name="properties[{{ message_property_name }}]"></textarea>
+      </div>
+      {% endif %}
+      
+      <div class="minicart-giftbox-footer">
+      <hr>
+      </div>
+    </form>
+    {% else %}
+    <input type="button" aria-disabled="true" disabled value="{{ 'products.product.sold_out' | t }}" class="add-to-cart"/>
+    {% endif %}
+  </div>
+</div>
+  

@@ -1,0 +1,142 @@
+<div data-section-id="{{ section.id }}" data-section-type="shop-the-look" class="shop-the-look page-width">
+  <div class="grid grid--uniform grid--shopthelook">
+    <div class="grid__item small--one-whole one-half shopthelook--bullets">
+      {%- for block in section.blocks -%}
+      <div style="left: {{block.settings.pos_x}}%; top: {{block.settings.pos_y}}%;"
+        class="shopthelook--bullet {{forloop.index0}}"></div>
+      {%- endfor -%}
+      {%- if section.settings.image -%}
+        {%- assign preview_image = section.settings.image -%}
+        {%- assign img_url = preview_image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+        <div class="reset-highlight" style="height: 0; padding-bottom: {{ 100 | divided_by: preview_image.aspect_ratio }}%;">
+          <img class="shopthelook__image lazyload"
+               data-src="{{ img_url }}"
+               data-widths="[180, 360, 540, 720, 900, 1080]"
+               data-aspectratio="{{ preview_image.aspect_ratio }}"
+               data-sizes="auto"
+               alt="{{ preview_image.alt | escape }}">
+          <noscript>
+          <img class="shopthelook__image lazyloaded"
+            src="{{ preview_image | img_url: '400x' }}"
+            alt="{{ preview_image.alt | escape }}">
+        </noscript>
+        </div>
+      {%- else -%}
+        {{ 'collection-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      {%- endif -%}
+    </div>
+    <div class="grid__item small--one-whole one-half">
+      <div class="feature-row__text--left rte">
+        {%- if section.settings.title != blank -%}
+          <h2>{{ section.settings.title}}</h2>
+        {%- endif -%}
+        {%- if section.settings.text != blank -%}
+          <p>{{ section.settings.text }}</p>
+        {%- endif -%}
+      </div>
+      {%- if section.blocks.size > 0 -%}
+        <form action="/cart/add" method="post" enctype="multipart/form-data" class="feature-row__text--left shopthelook--form">
+          <h5>{{ 'sections.shopthelook.title' | t }}</h5>
+          {%- for block in section.blocks -%}
+            <div class="shopthelook--form-item {{forloop.index0}}">
+              {%- assign p = all_products[block.settings.product] -%}
+              {%- assign i = p.featured_image -%}
+              {%- assign c = p.selected_or_first_available_variant -%}
+              <div class="image">
+                <a href="{{p.url}}">
+                  <img src="{{ i | img_url: '80x80' }}" class="lazyload" />
+                </a>
+              </div>
+              <div class="content">
+                <h6><a href="{{p.url}}">{{ p.title }}</a></h6>
+
+                <select name="id" id="ProductSelect-{{ section.id }}">
+                  {%- for variant in p.variants -%}
+                    {%- if variant.available -%}
+                      <option {% if variant == product.selected_or_first_available_variant %}
+                        selected="selected"{% endif %}
+                        value="{{ variant.id }}">
+                        {{ variant.title | replace: "Default Title", "One size"}} - {{ variant.price | money_with_currency }}
+                      </option>
+                    {%- else -%}
+                      <option disabled="disabled">
+                        {{ variant.title | replace: "Default Title", "One size" }} - {{ 'products.product.sold_out' | t }}
+                      </option>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </select>
+              
+              </div>
+            </div>
+          {%- endfor -%}
+          <button type="submit"class="btn" data-add-the-look>{{ 'sections.shopthelook.purchase_all' | t }} <span>{{ section.blocks.size }}</span></button> 
+        </form>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Shop the look",
+    "class": "index-section",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Featured image"
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Section title"
+      },
+      {
+        "type": "richtext",
+        "id": "text",
+        "label": "Content"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "product",
+        "name": "Product",
+        "settings": [
+          {
+            "type": "product",
+            "id": "product",
+            "label": "Select product"
+          },
+          {
+            "type": "range",
+            "id": "pos_x",
+            "label": "Position (horizontal)",
+            "info": "Bullet position on image, horizontal axis.",
+            "min": 0,
+            "max": 100,
+            "unit": "%",
+            "step": 1,
+            "default": 50
+          },
+          {
+            "type": "range",
+            "id": "pos_y",
+            "label": "Position (vertical)",
+            "info": "Bullet position on image, vertical axis.",
+            "min": 0,
+            "max": 100,
+            "unit": "%",
+            "step": 1,
+            "default": 50
+          }
+        ]
+      }
+    ],
+    "presets":  [
+      {
+        "name": "Shop the look",
+        "category": "Promotional"
+      }
+    ]
+  }
+{% endschema %}

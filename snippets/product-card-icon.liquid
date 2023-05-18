@@ -1,0 +1,14 @@
+
+{%- if data -%}
+  {%- assign ref = data.metafields.product_card.icon.references | first -%}
+  {%- if ref -%}
+    {%- assign ref_index = ref.index -%}
+
+    {%- assign section_type = shop.metafields.acf_settings.global.fields | where: 'section_name', ref.section | map: "name" | first -%}
+    {%- assign section_data = shop.metafields.globals[section_type][ref_index] | first -%}
+    
+    <div class="grid-product__icon">
+      <img src="{{section_data.src}}" alt="{{data.title}}"/>
+    </div>
+  {%- endif -%}
+{%- endif -%}

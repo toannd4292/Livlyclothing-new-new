@@ -1,0 +1,71 @@
+<div class="ajaxcart__product" data-product-id="{{ reco_product.id }}" data-product-to-remove>
+  <div class="ajaxcart__row">
+    <div class="grid">
+      {% if reco_product.featured_image %}
+        <div class="grid__item one-third">
+          <a href="{{reco_product.url}}" class="ajaxcart__product-image">
+            <img src="{{ reco_product.featured_image | product_img_url: 'x180' }}"  alt="{{ item.alt | escape }}" />
+          </a>
+        </div>
+      {% endif %}
+      <div class="grid__item two-thirds">
+        <div class="ajaxcart__product-name--wrapper">
+          <a href="{{reco_product.url}}">{{reco_product.title}}</a>
+        </div>
+        <div class="grid grid--full display-table">
+          <div class="grid__item display-table-cell one-half">
+            {% assign reco_variant_count = reco_product.variants | size %}
+            {% if reco_variant_count == 1 and reco_product.available == true and settings.minicart_reco_show_addtocart %}
+              <form method="post" action="/cart/add" class="add-to-cart-form upsell" data-remove-on-complete="true">
+                <input type="hidden" name="quantity" value="1" min="1">
+                <input type="hidden" name="id" value="{{ reco_product.variants.first.id }}" />
+                <input type="submit" value="{{ 'products.product.add_to_cart' | t }}" class="add-to-cart"/>
+              </form>
+            {% elsif reco_variant_count > 1 and reco_product.available == true and settings.minicart_reco_show_addtocart %}
+              <form method="post" action="/cart/add" enctype="multipart/form-data" class="add-to-cart-form upsell" data-remove-on-complete="true">
+                <select name="id">
+                  {%- for variant in reco_product.variants -%}
+                    {%- if variant.available -%}
+                      <option {% if variant == reco_product.selected_or_first_available_variant %}
+                        selected="selected"{% endif %}
+                        value="{{ variant.id }}">
+                        {{ variant.title }} - {{ variant.price | money_with_currency }}
+                      </option>
+                    {%- else -%}
+                      <option disabled="disabled">
+                        {{ variant.title }} - {{ 'products.product.sold_out' | t }}
+                      </option>
+                    {%- endif -%}
+                  {%- endfor -%}
+                  <input type="submit" style="margin-top: 10px;" value="{{ 'products.product.add_to_cart' | t }}" class="add-to-cart"/>
+                </select>
+              </form>
+            {% else %}
+              <input type="button" aria-disabled="true" disabled value="{{ 'products.product.sold_out' | t }}" class="add-to-cart"/>
+            {% endif %}
+          </div>
+          <div class="grid__item display-table-cell one-half text-right">
+            {% if reco_product.compare_at_price > reco_product.price %}
+              {% if reco_product.price_varies %}
+                {%- assign sale_price = reco_product.price | money -%}
+                <span class="ajaxcart__price">
+                  {{ 'products.general.from_text_html' | t: price: sale_price }}
+                </span>
+              {% else %}
+                <small class="cart__price--strikethrough">{{ reso_product.compare_at_price | money }}</small>
+                <span class="ajaxcart__price">{{ reco_product.price | money }}</span>
+              {% endif %}
+            {% else %}
+              <span class="ajaxcart__price">{{ reco_product.price | money }}</span>
+            {% endif %}
+
+            {% unless reco_product.available %}
+              <small>{{ 'products.product.sold_out' | t }}</small>
+            {% endunless %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  

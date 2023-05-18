@@ -1,0 +1,99 @@
+{% if settings.minicart_reco_enabled %}
+  {% assign minicart_recommendations = collections[settings.minicart_reco_default] %}
+  {% assign minicart_recommendations_limit = settings.minicart_reco_limit %}
+  {% assign minicart_recommendations_shown = 0 %}
+  {% assign minicart_recommendations_title = settings.minicart_reco_title %}
+  {% assign minicart_recommendations_description = settings.minicart_reco_description %}
+  {% assign minicart_excluded_products_list = ''%}
+  {% assign product_has_overwrites = false  %}
+
+  {% comment %}
+    Add currently viewed product and products included
+    in the cart to the excludedproducts list
+  {% endcomment %}
+  {% if template contains 'product' %}
+    {% assign minicart_excluded_products_list = product.id | append: ' ' %}
+  {% endif %}
+  {% if cart.items %}
+    {% for item in cart.items %}
+      {% assign minicart_excluded_products_list = minicart_excluded_products_list | append: item.product_id | append: ' ' %}
+    {% endfor %}
+  {% endif %}
+
+  {% comment %}
+    In product page, loop trough tags to get product
+    recommendations that overwrite the default collection
+    products.
+  {% endcomment %}
+  {% if settings.minicart_reco_tags_enabled and template contains 'product' %}
+    {% for tag in product.tags %}
+      {% if tag contains '_upsell:' %}
+        {% assign minicart_recommendations = tag | remove: '_upsell:' | remove: ' ' | split: '|' %} 
+        {% assign product_has_overwrites = true  %}
+      {% elsif tag contains '_upsell_title:' %}
+        {% assign minicart_recommendations_title = tag | remove: '_upsell_title:' %}
+      {% elsif tag contains '_upsell_desc:' %}
+        {% assign minicart_recommendations_description = tag | remove: '_upsell_desc:' | append: '</p>' | prepend: '<p>' %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% comment %}
+    Capture the recommendation to a varaible so that it can
+    be shown only when there are active recommendations for
+    the current view.
+  {% endcomment %}
+  {% capture recom_section %}
+  <div class="off-canvas-cart--recommendations">
+
+    {% if minicart_recommendations_title != empty or minicart_recommendations_description != empty %}
+      <div class="recommendations-header">
+        {% unless minicart_recommendations_title == empty %}
+          <p class="recommendation-title">{{ minicart_recommendations_title }}</p>
+        {% endunless %}
+        {% unless minicart_recommendations_description == empty %}
+          <div class="recommendation-description">{{ minicart_recommendations_description | replace: '[', '<b>' | replace: ']', '</b>' }}</div>
+        {% endunless %}
+      </div>
+    {% endif %}
+
+    <div class="recommended-products">
+      {% if product_has_overwrites %}
+        {% comment %} PRODUCT OVERWRITES {% endcomment %}
+        {% for reco_product_handle in minicart_recommendations %}
+          {% assign reco_product = all_products[reco_product_handle] %}
+          {% if minicart_excluded_products_list contains reco_product.id %}
+            {% assign minicart_recommendations_limit = minicart_recommendations_limit | plus: 1 %}
+          {% else %}
+            {% if reco_product.available %}
+              {% render 'cart-drawer-recommendations-product', reco_product: reco_product %}
+              {% assign minicart_recommendations_shown = minicart_recommendations_shown | plus: 1  %}
+            {% endif %}
+          {% endif %}
+          {% if forloop.index == minicart_recommendations_limit %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+
+      {% elsif minicart_recommendations != empty %}
+        {% comment %} DEFAULT PRODUCTS {% endcomment %}
+        {% for reco_product in minicart_recommendations.products %}
+          {% if minicart_excluded_products_list contains reco_product.id %}
+            {% assign minicart_recommendations_limit = minicart_recommendations_limit | plus: 1 %}
+          {% else %}
+            {% render 'cart-drawer-recommendations-product', reco_product: reco_product %}
+            {% assign minicart_recommendations_shown = minicart_recommendations_shown | plus: 1  %}
+          {% endif %}
+          {% if forloop.index == minicart_recommendations_limit %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  {% endcapture %}
+
+  {% if minicart_recommendations_shown > 0 %} 
+    {{ recom_section }}
+  {% endif %}
+{% endif %}

@@ -1,0 +1,78 @@
+{%- unless option_name -%} {%- assign option_name = option.name -%} {%- endunless -%}
+{%- unless option_selected_value -%} {%- assign option_selected_value = option.selected_value -%} {%- endunless -%}
+{%- assign swatch_file_extension = 'png' -%}
+{%- assign selected_variant = product.selected_or_first_available_variant -%}
+
+{%- if option_name == 'Color' -%}
+  {%- assign is_color = true -%}
+{%- endif -%}
+
+<div class="variant-wrapper variant-wrapper--{{ settings.variant_type }} js">
+  <label class="variant__label{% if option.name == 'Default' or option.name == 'Title' %} hidden-label{% endif %}{% unless settings.variant_labels_enable %} hidden-label{% endunless %}"
+    for="ProductSelect-{{ section_id }}-option-{{ forloop.index0 }}">
+    {{ option_name }}
+    {%- if is_color -%}
+      <span class="variant__label-info">
+        &mdash;
+        <span
+          id="VariantColorLabel-{{ section_id }}-{{ forloop.index0 }}"
+          data-option-index="{{ color_option_index }}">
+          {{ option_selected_value }}
+        </span>
+      </span>
+    {%- endif -%}
+  </label>
+  {%- assign option_index = forloop.index -%}
+  <fieldset class="variant-input-wrap"
+    name="{{ option_name }}"
+    data-index="option{{ option_index }}"
+    id="ProductSelect-{{ section_id }}-option-{{ forloop.index0 }}">
+    {%- for value in option.values -%}
+      {%- liquid
+        assign product_available = true
+        if product.options.size == 1
+          assign product_available = product.variants[forloop.index0].available
+        endif
+      -%}
+    
+      <div
+        class="variant-input{% if product == giftProduct %} js-variant-input-giftbox variant-input-giftbox{% if selected_variant.option1 == value or selected_variant.option2 == value or selected_variant.option3 == value %} variant-input-giftbox-select{% endif %}{% endif %}"
+        data-index="option{{ option_index }}"
+        data-value="{{ value | escape }}">
+        <input type="radio"
+          {% if option.selected_value == value %} checked="checked"{% endif %}
+          value="{{ value | escape }}"
+          data-index="option{{ option_index }}"
+          name="{{ option.name }}"
+          class="variant__input-{{ section_id }}{% unless product_available %} disabled{% endunless %}{% if is_color %} variant__input--color-swatch-{{ section_id }}{% endif %}"
+          {% if is_color %} data-color-name="{{ value | escape }}"{% endif %}
+          {% if is_color %} data-color-index="{{ color_option_index }}"{% endif %}
+          id="ProductSelect-{{ section_id }}-option-{{ option.name | handleize }}-{{ value | url_encode }}">
+        {%- if is_color -%}
+          {%- for variant in product.variants -%}
+            {%- if value == variant.option1 or value == variant.option2 or value == variant.option3 -%}
+              <label 
+                for="ProductSelect-{{ section_id }}-option-{{ option.name | handleize }}-{{ value | url_encode }}"
+                class="variant__button-label swatch{% unless product_available %} disabled{% endunless %}">
+                
+                {%- if product == giftProduct -%}
+                  {%- assign color_image = value  | replace: ' ','' | append: '.png' -%}
+                  <img src="{{ color_image | asset_img_url: '80x80' | crop: 'center' }}" class="lazyload">
+                {%- else -%}
+                  <img src="{{ variant.image | img_url: '80x80' | crop: 'center' }}" class="lazyload">
+                {%- endif -%}
+                
+                
+              </label>
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- else -%}
+          <label
+            for="ProductSelect-{{ section_id }}-option-{{ option.name | handleize }}-{{ value | url_encode }}"
+            class="variant__button-label{% unless product_available %} disabled{% endunless %}">{{ value | escape }}</label>
+        {%- endif -%}
+      </div>
+    {%- endfor -%}
+  </fieldset>
+</div>
